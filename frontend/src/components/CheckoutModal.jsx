@@ -1,105 +1,85 @@
-// import React, { useState } from "react";
-// import axios from "axios";
+import React, { useState } from "react";
+import { checkout } from "../api/api";
 
-// export default function CheckoutModal({ onClose }) {
-//   const [form, setForm] = useState({ name: "", email: "" });
-//   const [receipt, setReceipt] = useState(null);
+const CheckoutModal = ({ close, refreshCart }) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [receipt, setReceipt] = useState(null);
 
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     const res = await axios.post("http://localhost:5000/api/checkout", form);
-//     setReceipt(res.data.receipt);
-//   };
-
-//   return (
-//     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-//       <div className="bg-white p-6 rounded w-96">
-//         {!receipt ? (
-//           <form onSubmit={handleSubmit}>
-//             <h2 className="text-xl font-semibold mb-4">Checkout</h2>
-//             <input
-//               className="border w-full p-2 mb-2"
-//               placeholder="Name"
-//               onChange={(e) => setForm({ ...form, name: e.target.value })}
-//             />
-//             <input
-//               className="border w-full p-2 mb-2"
-//               placeholder="Email"
-//               onChange={(e) => setForm({ ...form, email: e.target.value })}
-//             />
-//             <button className="bg-blue-500 text-white px-4 py-2 rounded">Submit</button>
-//           </form>
-//         ) : (
-//           <>
-//             <h2 className="text-lg font-semibold mb-3">✅ Order Confirmed!</h2>
-//             <p>Name: {receipt.name}</p>
-//             <p>Email: {receipt.email}</p>
-//             <p>Total: ₹{receipt.total}</p>
-//             <p>Time: {new Date(receipt.timestamp).toLocaleString()}</p>
-//             <button
-//               onClick={onClose}
-//               className="mt-3 bg-gray-600 text-white px-3 py-1 rounded"
-//             >
-//               Close
-//             </button>
-//           </>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-
-import React, { useState } from 'react'
-import API from '../api/api'
-
-
-export default function CheckoutModal({ onClose, onSuccess }) {
-  const [form, setForm] = useState({ name: '', email: '' })
-  const [loading, setLoading] = useState(false)
-  const [receipt, setReceipt] = useState(null)
-
-
-  const submit = async (e) => {
-    e.preventDefault()
+  const handleCheckout = async () => {
     try {
-      setLoading(true)
-      const res = await API.post('/checkout', form)
-      setReceipt(res.data.receipt)
-      if (onSuccess) onSuccess()
+      const data = await checkout(name, email);
+      setReceipt(data.receipt);
+      refreshCart();
     } catch (err) {
-      console.error('Checkout failed', err)
-      alert(err.response?.data?.message || 'Checkout failed')
-    } finally {
-      setLoading(false)
+      alert("Checkout failed!");
     }
-  }
-
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded p-5">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50">
+      <div className="bg-gradient-to-br from-gray-900 to-black text-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-700">
         {!receipt ? (
-          <form onSubmit={submit}>
-            <h3 className="text-lg font-semibold mb-3">Checkout</h3>
-            <input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full p-2 mb-2 border rounded" />
-            <input required placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full p-2 mb-2 border rounded" />
-            <div className="flex gap-2 justify-end">
-              <button type="button" onClick={onClose} className="px-3 py-1">Cancel</button>
-              <button type="submit" className="bg-blue-600 text-white px-3 py-1 rounded">{loading ? 'Processing...' : 'Pay (Mock)'}</button>
+          <>
+            <h2 className="text-2xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+              Complete Checkout
+            </h2>
+
+            <input
+              type="text"
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full mb-3 p-3 rounded-lg bg-gray-800 border border-gray-700 placeholder-gray-400 text-white focus:ring-2 focus:ring-gray-500"
+            />
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full mb-5 p-3 rounded-lg bg-gray-800 border border-gray-700 placeholder-gray-400 text-white focus:ring-2 focus:ring-gray-500"
+            />
+
+            <div className="flex justify-between">
+              <button
+                onClick={close} // ✅ Fixed here
+                className="px-5 py-2 rounded-xl bg-gray-700 hover:bg-gray-600 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCheckout}
+                className="px-6 py-2 rounded-xl font-semibold bg-gradient-to-r from-gray-200 to-gray-500 text-black hover:scale-105 transition-all"
+              >
+                Confirm
+              </button>
             </div>
-          </form>
+          </>
         ) : (
-          <div>
-            <h3 className="text-lg font-semibold">Order Confirmed</h3>
-            <p className="mt-2">Total: ₹{receipt.total}</p>
-            <p className="text-sm text-gray-600">Time: {new Date(receipt.timestamp).toLocaleString()}</p>
-            <div className="mt-4 flex justify-end">
-              <button onClick={onClose} className="bg-gray-600 text-white px-3 py-1 rounded">Close</button>
+          <>
+            <h2 className="text-2xl font-bold mb-4 text-center text-green-400">
+              ✅ Payment Successful
+            </h2>
+            <div className="bg-gray-800 rounded-lg p-4 space-y-2 border border-gray-700">
+              <p><span className="text-gray-400">Name:</span> {receipt.name}</p>
+              <p><span className="text-gray-400">Email:</span> {receipt.email}</p>
+              <p><span className="text-gray-400">Total:</span> ${receipt.total}</p>
+              <p>
+                <span className="text-gray-400">Date:</span>{" "}
+                {new Date(receipt.timestamp).toLocaleString()}
+              </p>
             </div>
-          </div>
+            <button
+              onClick={close}
+              className="w-full mt-5 py-2 rounded-xl bg-gradient-to-r from-gray-200 to-gray-500 text-black font-semibold hover:scale-105 transition-all"
+            >
+              Close
+            </button>
+          </>
         )}
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default CheckoutModal;
